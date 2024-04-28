@@ -1,41 +1,58 @@
 import joblib
-from flask import Flask, render_template, request
-# from text_filter import my_review_filter
+import pandas as pd
+from flask import Flask, render_template, request, send_file
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+from multiprocessing import Process
+from amazon.amazon.spiders.amspy import AmspySpider
 model = None
 vectorizer = None
+    
+def crawl(link):
+    process = CrawlerProcess(get_project_settings())
+    process.crawl(AmspySpider, slink=link)
+    process.start()
+    process.join()
 
-# def init():
-#     global model,vectorizer
-#     model = joblib.load(r'./Model/trained_model.pkl')
-#     vectorizer = joblib.load(r'./Model/trained_vectorizer.pkl')
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    # init()
     return render_template('index.html')
 
 @app.route('/result', methods=['POST','GET'])
 def result():
-    # if(model==None):init()
     if request.method == 'POST':
-        txt = request.form['text']
-        if len(txt)>0:
-            # X = vectorizer.transform([txt])
-            # predict_val = model.predict(X)
-            # prob = model.predict_proba(X)
-            predict_val=1
-            if predict_val == 1:
-                predict_res = 'POSITIVE'
-                confidence = 100
-                return render_template('index.html', page='text', prediction_text = predict_res, confidence = round(100*confidence,2), bg='green')
+        input = request.form['inputType']
+        if input == 'text':
+            txt = request.form['text']
+            if len(txt)>0:
+                predict_val=1
+                if predict_val == 1:
+                    predict_res = 'POSITIVE'
+                    confidence = 1
+                    return render_template('index.html', page='text', prediction_text = predict_res, confidence = round(100*confidence,2), bg='green')
+                else:
+                    predict_res = 'NEGATIVE'
+                    confidence = 0
+                    return render_template('index.html', page='text', prediction_text = predict_res, confidence = round(100*confidence,2), bg='red')
             else:
-                predict_res = 'NEGATIVE'
-                confidence = 0
-                return render_template('index.html', page='text', prediction_text = predict_res, confidence = round(100*confidence,2), bg='red')
+                return render_template('index.html', page='empty')
         else:
-            return render_template('index.html', page='empty')
+            link = request.form['link']
+            if len(link) > 0 and link.startswith('https://www.amazon.in/'):
+                crawl_process = Process(target=crawl, args=(link,))
+                crawl_process.start()
+                crawl_process.join() 
+                return render_template('index.html', page='download')
+            else:
+                return render_template('index.html', page='wrong_link')
+
+@app.route('/download_data', methods=['POST','GET'])
+def download_data():
+    file_path = './data.csv'  
+    return send_file(file_path, as_attachment=True)
 
 # not fot production
 if __name__ == '__main__':
