@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/style.css')}}">
+    <link rel="stylesheet" href="../static/styles.css">
+    <title>Sentiment Analysis</title>
+</head>
+<body>
+    <!-- <h1 class="head">Amazon Customer Review</h1> -->
+    <h1 class="head">Sentiment Analysis</h1>
+
+    <div class="container">
+        <form action="/result" method="post">
+            <div id="textInput" class="item">
+                <h4>Enter Text: </h4>
+                <textarea id="textarea" name="text" rows="1" cols="50"></textarea>
+            </div>
+            <input type="submit" value="Submit">
+        </form>
+
+        <div id="result">
+            {% if page == 'text' %}
+            <div style="background-color: {{bg}};"> 
+                <p>Sentiment Result: {{ prediction_text }}</p>
+                <p>Confidence: {{ confidence }}</p>
+            </div>
+            {% elif page == 'empty' %}
+            <div>
+                <p>Sentiment of empty text hmm...🤔🤔</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='../static/script.js')}}"></script>
+</body>
+</html>
